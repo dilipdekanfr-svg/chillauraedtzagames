@@ -48,11 +48,29 @@
     --christmas-green: 140 70% 40%;
     --halloween-orange: 25 95% 55%;
     --halloween-purple: 270 70% 45%;
+    --spring-pink: 340 80% 65%;
+    --spring-green: 140 60% 55%;
+    --spring-sky: 200 85% 60%;
+    --spring-yellow: 50 90% 55%;
+    --autumn-orange: 25 90% 50%;
+    --autumn-brown: 25 50% 35%;
+    --autumn-gold: 40 85% 55%;
+    --autumn-red: 0 70% 45%;
 
     /* Gradients */
     --gradient-neon: linear-gradient(135deg, hsl(185 100% 50%) 0%, hsl(320 100% 60%) 100%);
     --gradient-christmas: linear-gradient(135deg, hsl(0 85% 50%) 0%, hsl(140 70% 40%) 100%);
     --gradient-halloween: linear-gradient(135deg, hsl(25 95% 55%) 0%, hsl(270 70% 45%) 100%);
+    --gradient-spring: linear-gradient(135deg, hsl(340 80% 65%) 0%, hsl(140 60% 55%) 100%);
+    --gradient-autumn: linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(40 85% 55%) 100%);
+    
+    /* Glow effects */
+    --glow-cyan: 0 0 20px hsl(185 100% 50% / 0.5), 0 0 40px hsl(185 100% 50% / 0.3);
+    --glow-pink: 0 0 20px hsl(320 100% 60% / 0.5), 0 0 40px hsl(320 100% 60% / 0.3);
+    --glow-christmas: 0 0 20px hsl(0 85% 50% / 0.5), 0 0 40px hsl(140 70% 40% / 0.3);
+    --glow-halloween: 0 0 20px hsl(25 95% 55% / 0.5), 0 0 40px hsl(270 70% 45% / 0.3);
+    --glow-spring: 0 0 20px hsl(340 80% 65% / 0.5), 0 0 40px hsl(140 60% 55% / 0.3);
+    --glow-autumn: 0 0 20px hsl(25 90% 50% / 0.5), 0 0 40px hsl(40 85% 55% / 0.3);
     
     /* Glow effects */
     --glow-cyan: 0 0 20px hsl(185 100% 50% / 0.5), 0 0 40px hsl(185 100% 50% / 0.3);
