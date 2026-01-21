@@ -72,6 +72,18 @@ export default {
           orange: "hsl(var(--halloween-orange))",
           purple: "hsl(var(--halloween-purple))",
         },
+        spring: {
+          pink: "hsl(var(--spring-pink))",
+          green: "hsl(var(--spring-green))",
+          sky: "hsl(var(--spring-sky))",
+          yellow: "hsl(var(--spring-yellow))",
+        },
+        autumn: {
+          orange: "hsl(var(--autumn-orange))",
+          brown: "hsl(var(--autumn-brown))",
+          gold: "hsl(var(--autumn-gold))",
+          red: "hsl(var(--autumn-red))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
