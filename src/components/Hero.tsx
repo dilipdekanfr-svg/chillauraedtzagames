@@ -1,4 +1,4 @@
-const profileImage = "/lovable-uploads/8e0d1188-ee3b-4a78-ae0a-49f8b0c2f72c.png";
+import profileImage from "@/assets/chillaura-profile.png";
 
 const Hero = () => {
   return (

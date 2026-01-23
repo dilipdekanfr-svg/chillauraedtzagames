@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="container max-w-4xl mx-auto text-center">
         <div className="flex justify-center gap-6 mb-4">
           <a
-            href="https://youtube.com/@ChillauraMPG"
+            href="https://www.youtube.com/channel/UCqFrLH6FGpTr8PyMLvlDz7w"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
