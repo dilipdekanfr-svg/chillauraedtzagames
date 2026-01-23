@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 
 interface DynamicGameProps {
@@ -19,7 +19,7 @@ const gameMechanics = [
   'defenseGame', 'racingGame', 'launchGame', 'timingGame', 'resourceManager'
 ];
 
-const DynamicGame = ({ gameId, category, emoji, name, themeColor }: DynamicGameProps) => {
+const DynamicGame = forwardRef<HTMLDivElement, DynamicGameProps>(({ gameId, category, emoji, name, themeColor }, ref) => {
   const mechanic = gameMechanics[gameId % gameMechanics.length];
   const variant = Math.floor(gameId / gameMechanics.length) % 10;
   const speedMod = 1 + (gameId % 5) * 0.2;
@@ -132,6 +132,7 @@ const DynamicGame = ({ gameId, category, emoji, name, themeColor }: DynamicGameP
     setHealth(100);
     setSequence([]);
     setPlayerSequence([]);
+    setShowing(-1);
     
     if (mechanic === 'memorySequence' || mechanic === 'simonSays') {
       const newSeq = Array.from({ length: 3 + variant }, () => Math.floor(Math.random() * 4));
@@ -150,6 +151,11 @@ const DynamicGame = ({ gameId, category, emoji, name, themeColor }: DynamicGameP
         y: Math.random() * 60 + 20,
         type: Math.floor(Math.random() * 4)
       })));
+    }
+    
+    if (mechanic === 'reactionTest') {
+      const delay = 1000 + Math.random() * 3000;
+      setTimeout(() => setShowing(0), delay);
     }
   };
 
@@ -243,8 +249,8 @@ const DynamicGame = ({ gameId, category, emoji, name, themeColor }: DynamicGameP
             <div className="absolute text-2xl" style={{ left: `${playerPos.x}%`, top: `${playerPos.y}%`, transform: 'translate(-50%, -50%)' }}>
               🏃
             </div>
-            <div className="absolute bottom-2 left-2 right-2 h-2 bg-gray-300 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500" style={{ width: `${health}%` }} />
+            <div className="absolute bottom-2 left-2 right-2 h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-destructive transition-all" style={{ width: `${health}%` }} />
             </div>
           </div>
         );
@@ -263,8 +269,8 @@ const DynamicGame = ({ gameId, category, emoji, name, themeColor }: DynamicGameP
       case 'balanceBar':
         return (
           <div className="text-center">
-            <div className="w-full h-4 bg-gray-300 rounded-full overflow-hidden mb-4">
-              <div className="h-full bg-green-500 transition-all" style={{ width: `${power}%`, marginLeft: `${50 - power/2}%` }} />
+            <div className="w-full h-4 bg-muted rounded-full overflow-hidden mb-4">
+              <div className="h-full bg-primary transition-all" style={{ width: `${power}%`, marginLeft: `${50 - power/2}%` }} />
             </div>
             <div className="flex gap-2 justify-center">
               <Button onClick={() => setPower(p => Math.max(0, p - 10))}>◀</Button>
@@ -286,7 +292,7 @@ const DynamicGame = ({ gameId, category, emoji, name, themeColor }: DynamicGameP
   };
 
   return (
-    <div className="flex flex-col items-center p-4">
+    <div ref={ref} className="flex flex-col items-center p-4">
       <div className="flex justify-between w-full mb-4">
         <span className={`font-display ${themeColor.replace('bg-', 'text-')}`}>
           {mechanic === 'dodgeBall' ? `Health: ${health}` : `Score: ${score}`}
@@ -309,6 +315,8 @@ const DynamicGame = ({ gameId, category, emoji, name, themeColor }: DynamicGameP
       )}
     </div>
   );
-};
+});
+
+DynamicGame.displayName = 'DynamicGame';
 
 export default DynamicGame;
