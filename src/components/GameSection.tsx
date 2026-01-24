@@ -10,8 +10,9 @@ import halloweenGamesAll from "./games/halloween/gamesAll";
 import springGamesAll from "./games/spring/gamesAll";
 import autumnGamesAll from "./games/autumn/gamesAll";
 import normalGamesAll from "./games/normal/gamesAll";
+import threeDGamesAll from "./games/3d/gamesAll";
 
-type GameCategory = "christmas" | "halloween" | "spring" | "autumn" | "normal";
+type GameCategory = "christmas" | "halloween" | "spring" | "autumn" | "normal" | "3d";
 
 interface Game {
   id: string;
@@ -35,6 +36,7 @@ const GameSection = () => {
       case "spring": return springGamesAll;
       case "autumn": return autumnGamesAll;
       case "normal": return normalGamesAll;
+      case "3d": return threeDGamesAll;
       default: return christmasGamesAll;
     }
   };
@@ -64,6 +66,8 @@ const GameSection = () => {
         return { border: "border-spring-pink", glow: "shadow-spring-pink/20", text: "text-spring-pink", bg: "bg-spring-pink" };
       case "autumn":
         return { border: "border-autumn-red", glow: "shadow-autumn-red/20", text: "text-autumn-red", bg: "bg-autumn-red" };
+      case "3d":
+        return { border: "border-purple-500", glow: "shadow-purple-500/20", text: "text-purple-500", bg: "bg-purple-500" };
       default:
         return { border: "border-primary", glow: "shadow-primary/20", text: "text-primary", bg: "bg-primary" };
     }
@@ -86,11 +90,15 @@ const GameSection = () => {
           🎮 Play Games 🎮
         </h2>
         <p className="text-center text-muted-foreground mb-8">
-          Choose a category and enjoy <span className={styles.text}>1000 unique games</span> per section!
+          Choose a category and enjoy <span className={styles.text}>1000 unique games</span> per section! 
+          <span className="text-purple-500 font-bold"> Now with crazy 3D games! 🚀</span>
         </p>
 
         <Tabs value={category} onValueChange={handleCategoryChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
+            <TabsTrigger value="3d" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+              🚀 3D Games
+            </TabsTrigger>
             <TabsTrigger value="christmas" className="data-[state=active]:bg-christmas-red data-[state=active]:text-white">
               🎄 Christmas
             </TabsTrigger>
@@ -108,7 +116,7 @@ const GameSection = () => {
             </TabsTrigger>
           </TabsList>
 
-          {["christmas", "halloween", "spring", "autumn", "normal"].map((cat) => (
+          {["3d", "christmas", "halloween", "spring", "autumn", "normal"].map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-0">
               {selectedGame && selectedGameData ? (
                 <div className={`bg-card rounded-xl p-6 border-2 ${styles.border} shadow-lg ${styles.glow}`}>
