@@ -1,35 +1,58 @@
 import Dynamic3DGame from "./Dynamic3DGame";
 import { generateGameName, getGameEmoji } from "../gameGenerators";
 
-// Add 3D-specific name generators
-const generate3DGameName = (index: number): string => {
+// Generate shooting game names
+const generateShootingGameName = (index: number): string => {
   const prefixes = [
     'Cosmic', 'Neon', 'Cyber', 'Quantum', 'Hyper', 'Ultra', 'Mega', 'Super',
     'Astro', 'Galactic', 'Stellar', 'Nova', 'Plasma', 'Vortex', 'Nebula', 'Orbit',
-    'Crystal', 'Prism', 'Hologram', 'Virtual', 'Digital', 'Matrix', 'Pixel', 'Vector',
-    'Fusion', 'Pulse', 'Infinity', 'Zero', 'Apex', 'Prime', 'Core', 'Edge',
-    'Shadow', 'Light', 'Void', 'Flux', 'Wave', 'Beam', 'Spark', 'Glow'
+    'Laser', 'Photon', 'Turbo', 'Rapid', 'Blazing', 'Thunder', 'Lightning', 'Storm',
+    'Atomic', 'Nuclear', 'Fusion', 'Pulse', 'Infinity', 'Zero', 'Apex', 'Prime'
   ];
   const suffixes = [
-    'Runner', 'Dash', 'Chase', 'Quest', 'Hunter', 'Racer', 'Rider', 'Walker',
-    'Jumper', 'Climber', 'Diver', 'Flyer', 'Glider', 'Shooter', 'Blaster', 'Striker',
-    'Collector', 'Catcher', 'Grabber', 'Seeker', 'Finder', 'Breaker', 'Crusher', 'Smasher',
-    'Defender', 'Guardian', 'Warrior', 'Knight', 'Master', 'Champion', 'Hero', 'Legend',
-    'Sphere', 'Cube', 'Orb', 'Ring', 'Star', 'Crystal', 'Gem', 'Diamond',
-    'Escape', 'Adventure', 'Journey', 'Voyage', 'Mission', 'Challenge', 'Trial', 'Battle'
+    'Shooter', 'Blaster', 'Striker', 'Fighter', 'Destroyer', 'Hunter', 'Slayer', 'Terminator',
+    'Assault', 'Attack', 'Battle', 'Combat', 'Warfare', 'Gunner', 'Sniper', 'Marksman',
+    'Defense', 'Guardian', 'Protector', 'Defender', 'Sentinel', 'Warrior', 'Champion', 'Hero'
   ];
   
   return `${prefixes[index % prefixes.length]} ${suffixes[Math.floor(index / prefixes.length) % suffixes.length]}`;
 };
 
-const get3DGameEmoji = (index: number): string => {
-  const emojis = [
-    '🎮', '🕹️', '🚀', '🛸', '👾', '🤖', '🌟', '💫', '⭐', '🌙',
-    '🔮', '💎', '🎯', '🏆', '🎪', '🎨', '🎭', '🎲', '🃏', '🎰',
-    '🌌', '🌠', '💠', '🔷', '🔶', '⚡', '🔥', '❄️', '🌀', '🎇',
-    '🎆', '✨', '💥', '💢', '🌈', '🎵', '🎶', '🔔', '🎁', '🏅'
+// Generate racing game names
+const generateRacingGameName = (index: number): string => {
+  const prefixes = [
+    'Turbo', 'Nitro', 'Speed', 'Velocity', 'Hyper', 'Ultra', 'Mega', 'Super',
+    'Thunder', 'Lightning', 'Blaze', 'Flash', 'Sonic', 'Rapid', 'Swift', 'Quick',
+    'Cosmic', 'Neon', 'Cyber', 'Quantum', 'Astro', 'Galactic', 'Stellar', 'Nova',
+    'Extreme', 'Insane', 'Crazy', 'Wild', 'Fury', 'Rage', 'Storm', 'Tornado'
   ];
-  return emojis[index % emojis.length];
+  const suffixes = [
+    'Racer', 'Racing', 'Rush', 'Dash', 'Sprint', 'Chase', 'Pursuit', 'Drift',
+    'Circuit', 'Track', 'Rally', 'Grand Prix', 'Championship', 'League', 'Cup', 'Trophy',
+    'Velocity', 'Acceleration', 'Speedway', 'Highway', 'Boulevard', 'Street', 'Road', 'Lane'
+  ];
+  
+  return `${prefixes[index % prefixes.length]} ${suffixes[Math.floor(index / prefixes.length) % suffixes.length]}`;
+};
+
+const generate3DGameName = (index: number): string => {
+  // Even = shooting, Odd = racing
+  if (index % 2 === 0) {
+    return generateShootingGameName(Math.floor(index / 2));
+  } else {
+    return generateRacingGameName(Math.floor(index / 2));
+  }
+};
+
+const get3DGameEmoji = (index: number): string => {
+  const shootingEmojis = ['🎯', '🔫', '💥', '🚀', '👾', '🛸', '⚡', '💫', '🔥', '☄️'];
+  const racingEmojis = ['🏎️', '🏁', '🚗', '🏍️', '🛞', '⚡', '💨', '🌪️', '🔥', '✨'];
+  
+  if (index % 2 === 0) {
+    return shootingEmojis[Math.floor(index / 2) % shootingEmojis.length];
+  } else {
+    return racingEmojis[Math.floor(index / 2) % racingEmojis.length];
+  }
 };
 
 // Generate 1000 unique 3D games

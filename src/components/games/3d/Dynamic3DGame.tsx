@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef, forwardRef, Suspense, useMemo } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Stars, Float, MeshWobbleMaterial, MeshDistortMaterial } from "@react-three/drei";
+import { useState, useEffect, useRef, forwardRef, Suspense } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Stars, Float } from "@react-three/drei";
 import { Button } from "@/components/ui/button";
 import * as THREE from "three";
 
@@ -12,191 +12,173 @@ interface Dynamic3DGameProps {
   themeColor: string;
 }
 
-const game3DMechanics = [
-  'orbCollector', 'cubeDodge', 'sphereShooter', 'mazeRunner', 'platformJump',
-  'asteroidDestroyer', 'ringToss', 'ballBounce', 'cubeStack', 'colorMatch3D',
-  'spaceFlight', 'tunnelRun', 'gemCollector', 'targetPractice', 'racingOrbs',
-  'puzzleCubes', 'gravityBall', 'laserDodge', 'crystalHunt', 'vortexEscape',
-  'pyramidClimb', 'starCatcher', 'waveRider', 'portalJump', 'neonChase',
-  'cosmicPong', 'shapeSorter', 'lightTrail', 'orbitMaster', 'quantumLeap'
-];
+// Game types: 0 = Shooting, 1 = Racing
+const getGameType = (gameId: number) => gameId % 2;
 
 // Generate unique color palette for each game
 const generateGamePalette = (gameId: number) => {
   const hue1 = (gameId * 37) % 360;
   const hue2 = (hue1 + 60 + (gameId % 60)) % 360;
   const hue3 = (hue1 + 180 + (gameId % 40)) % 360;
-  const saturation = 70 + (gameId % 30);
-  const lightness = 50 + (gameId % 20);
   
   return {
-    primary: `hsl(${hue1}, ${saturation}%, ${lightness}%)`,
-    secondary: `hsl(${hue2}, ${saturation}%, ${lightness}%)`,
-    accent: `hsl(${hue3}, ${saturation}%, ${lightness}%)`,
-    background: `hsl(${hue1}, 20%, 5%)`,
-    glow: `hsl(${hue1}, 100%, 60%)`
+    primary: `hsl(${hue1}, 80%, 60%)`,
+    secondary: `hsl(${hue2}, 70%, 50%)`,
+    accent: `hsl(${hue3}, 90%, 65%)`,
+    bg1: `hsl(${hue1}, 40%, 15%)`,
+    bg2: `hsl(${hue2}, 30%, 10%)`
   };
 };
 
-// Different shape types
-const shapeTypes = ['sphere', 'box', 'octahedron', 'dodecahedron', 'icosahedron', 'torus', 'torusKnot', 'cone', 'cylinder', 'tetrahedron'];
+// ==================== SHOOTING GAME COMPONENTS ====================
 
-// Collectible with unique shape based on game
-const UniqueCollectible = ({ 
-  position, 
-  onClick, 
-  color, 
-  shapeType, 
-  wobble,
-  distort,
-  floatSpeed,
-  size
-}: { 
-  position: [number, number, number]; 
-  onClick: () => void; 
-  color: string; 
-  shapeType: number;
-  wobble: boolean;
-  distort: boolean;
-  floatSpeed: number;
-  size: number;
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += 0.01 + floatSpeed * 0.01;
-      meshRef.current.rotation.y += 0.02 + floatSpeed * 0.01;
-    }
-  });
-
-  const renderGeometry = () => {
-    const s = size;
-    switch (shapeType % 10) {
-      case 0: return <sphereGeometry args={[s * 0.3, 32, 32]} />;
-      case 1: return <boxGeometry args={[s * 0.4, s * 0.4, s * 0.4]} />;
-      case 2: return <octahedronGeometry args={[s * 0.35]} />;
-      case 3: return <dodecahedronGeometry args={[s * 0.3]} />;
-      case 4: return <icosahedronGeometry args={[s * 0.3]} />;
-      case 5: return <torusGeometry args={[s * 0.25, s * 0.1, 16, 32]} />;
-      case 6: return <torusKnotGeometry args={[s * 0.2, s * 0.06, 64, 8]} />;
-      case 7: return <coneGeometry args={[s * 0.25, s * 0.5, 16]} />;
-      case 8: return <cylinderGeometry args={[s * 0.2, s * 0.2, s * 0.4, 16]} />;
-      case 9: return <tetrahedronGeometry args={[s * 0.35]} />;
-      default: return <sphereGeometry args={[s * 0.3, 32, 32]} />;
-    }
-  };
-
-  const renderMaterial = () => {
-    if (distort) {
-      return <MeshDistortMaterial color={color} emissive={color} emissiveIntensity={0.5} distort={0.4} speed={2} />;
-    }
-    if (wobble) {
-      return <MeshWobbleMaterial color={color} emissive={color} emissiveIntensity={0.5} factor={0.6} speed={2} />;
-    }
-    return <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} metalness={0.3} roughness={0.4} />;
-  };
-
-  return (
-    <Float speed={floatSpeed} rotationIntensity={0.5} floatIntensity={0.5}>
-      <mesh ref={meshRef} position={position} onClick={onClick}>
-        {renderGeometry()}
-        {renderMaterial()}
-      </mesh>
-    </Float>
-  );
-};
-
-// Unique obstacle based on game variant
-const UniqueObstacle = ({ 
-  position, 
-  color, 
-  speed, 
-  pattern,
-  shapeType,
-  size
-}: { 
-  position: [number, number, number]; 
-  color: string; 
+interface Enemy {
+  id: number;
+  x: number;
+  y: number;
+  z: number;
+  type: number;
   speed: number;
-  pattern: number;
-  shapeType: number;
-  size: number;
-}) => {
+}
+
+interface Bullet {
+  id: number;
+  x: number;
+  y: number;
+  z: number;
+}
+
+const EnemyShip = ({ enemy, palette, onHit }: { enemy: Enemy; palette: ReturnType<typeof generateGamePalette>; onHit: () => void }) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  const initialPos = useRef(position);
+  const shapes = ['box', 'sphere', 'pyramid', 'diamond'];
+  const shape = shapes[enemy.type % shapes.length];
   
   useFrame((state) => {
     if (meshRef.current) {
-      const t = state.clock.elapsedTime * speed;
-      
-      // Different movement patterns
-      switch (pattern % 6) {
-        case 0: // Sine wave horizontal
-          meshRef.current.position.x = initialPos.current[0] + Math.sin(t) * 3;
-          break;
-        case 1: // Circular
-          meshRef.current.position.x = initialPos.current[0] + Math.cos(t) * 2;
-          meshRef.current.position.y = initialPos.current[1] + Math.sin(t) * 2;
-          break;
-        case 2: // Figure 8
-          meshRef.current.position.x = initialPos.current[0] + Math.sin(t) * 2;
-          meshRef.current.position.y = initialPos.current[1] + Math.sin(t * 2) * 1.5;
-          break;
-        case 3: // Bounce
-          meshRef.current.position.y = initialPos.current[1] + Math.abs(Math.sin(t)) * 2;
-          break;
-        case 4: // Spiral in
-          const r = 2 + Math.sin(t * 0.5);
-          meshRef.current.position.x = initialPos.current[0] + Math.cos(t) * r;
-          meshRef.current.position.z = initialPos.current[2] + Math.sin(t) * r;
-          break;
-        case 5: // Random jitter
-          meshRef.current.position.x = initialPos.current[0] + Math.sin(t * 3) * 0.5;
-          meshRef.current.position.y = initialPos.current[1] + Math.cos(t * 4) * 0.5;
-          break;
-      }
-      
-      meshRef.current.rotation.x += 0.02;
-      meshRef.current.rotation.z += 0.01;
+      meshRef.current.rotation.y += 0.02;
+      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 2) * 0.1;
     }
   });
 
-  const renderGeometry = () => {
-    switch (shapeType % 5) {
-      case 0: return <boxGeometry args={[size, size, size]} />;
-      case 1: return <octahedronGeometry args={[size * 0.7]} />;
-      case 2: return <tetrahedronGeometry args={[size * 0.8]} />;
-      case 3: return <torusGeometry args={[size * 0.5, size * 0.2, 8, 16]} />;
-      case 4: return <icosahedronGeometry args={[size * 0.6]} />;
-      default: return <boxGeometry args={[size, size, size]} />;
-    }
-  };
+  const colors = [palette.primary, palette.secondary, palette.accent];
+  const color = colors[enemy.type % colors.length];
 
   return (
-    <mesh ref={meshRef} position={position}>
-      {renderGeometry()}
-      <meshStandardMaterial color={color} wireframe opacity={0.8} transparent />
+    <mesh ref={meshRef} position={[enemy.x, enemy.y, enemy.z]} onClick={onHit}>
+      {shape === 'sphere' && <sphereGeometry args={[0.5, 16, 16]} />}
+      {shape === 'pyramid' && <coneGeometry args={[0.5, 0.8, 4]} />}
+      {shape === 'diamond' && <octahedronGeometry args={[0.5]} />}
+      {shape === 'box' && <boxGeometry args={[0.6, 0.6, 0.6]} />}
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} />
     </mesh>
   );
 };
 
-// Player with unique appearance
-const UniquePlayer = ({ 
-  position, 
-  color, 
-  playerShape,
-  size,
-  trail
-}: { 
-  position: [number, number, number]; 
-  color: string;
-  playerShape: number;
-  size: number;
-  trail: boolean;
-}) => {
+const PlayerShip = ({ position, palette }: { position: { x: number; y: number }; palette: ReturnType<typeof generateGamePalette> }) => {
+  const meshRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 3) * 0.05;
+    }
+  });
+
+  return (
+    <group ref={meshRef} position={[position.x, position.y, 3]}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.3, 0.8, 6]} />
+        <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.5} metalness={0.8} />
+      </mesh>
+      <mesh position={[-0.35, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.1, 0.15, 0.4]} />
+        <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.3} />
+      </mesh>
+      <mesh position={[0.35, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.1, 0.15, 0.4]} />
+        <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.3} />
+      </mesh>
+    </group>
+  );
+};
+
+const BulletMesh = ({ bullet, palette }: { bullet: Bullet; palette: ReturnType<typeof generateGamePalette> }) => {
+  return (
+    <mesh position={[bullet.x, bullet.y, bullet.z]}>
+      <sphereGeometry args={[0.1, 8, 8]} />
+      <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={1} />
+    </mesh>
+  );
+};
+
+// ==================== RACING GAME COMPONENTS ====================
+
+const RaceTrack = ({ palette, trackLength }: { palette: ReturnType<typeof generateGamePalette>; trackLength: number }) => {
+  return (
+    <group>
+      {/* Main track */}
+      <mesh position={[0, -1, -trackLength/2]}>
+        <boxGeometry args={[8, 0.1, trackLength]} />
+        <meshStandardMaterial color="#222" />
+      </mesh>
+      {/* Lane dividers */}
+      {[-2, 0, 2].map((x, i) => (
+        <group key={i}>
+          {Array.from({ length: Math.floor(trackLength / 4) }).map((_, j) => (
+            <mesh key={j} position={[x, -0.9, -j * 4 - 2]}>
+              <boxGeometry args={[0.1, 0.15, 1.5]} />
+              <meshStandardMaterial color="white" />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {/* Track borders */}
+      <mesh position={[-4, -0.7, -trackLength/2]}>
+        <boxGeometry args={[0.3, 0.5, trackLength]} />
+        <meshStandardMaterial color={palette.primary} emissive={palette.primary} emissiveIntensity={0.3} />
+      </mesh>
+      <mesh position={[4, -0.7, -trackLength/2]}>
+        <boxGeometry args={[0.3, 0.5, trackLength]} />
+        <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.3} />
+      </mesh>
+    </group>
+  );
+};
+
+const CarModel = ({ position, color, isPlayer }: { position: [number, number, number]; color: string; isPlayer?: boolean }) => {
+  const meshRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    if (meshRef.current && isPlayer) {
+      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 5) * 0.02;
+    }
+  });
+
+  return (
+    <group ref={meshRef} position={position}>
+      {/* Car body */}
+      <mesh>
+        <boxGeometry args={[0.6, 0.25, 1.2]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isPlayer ? 0.5 : 0.2} metalness={0.7} />
+      </mesh>
+      {/* Cabin */}
+      <mesh position={[0, 0.2, -0.1]}>
+        <boxGeometry args={[0.5, 0.2, 0.5]} />
+        <meshStandardMaterial color="#111" transparent opacity={0.8} />
+      </mesh>
+      {/* Wheels */}
+      {[[-0.35, -0.15, 0.35], [0.35, -0.15, 0.35], [-0.35, -0.15, -0.35], [0.35, -0.15, -0.35]].map((pos, i) => (
+        <mesh key={i} position={pos as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.12, 0.12, 0.1, 16]} />
+          <meshStandardMaterial color="#222" />
+        </mesh>
+      ))}
+    </group>
+  );
+};
+
+const RaceObstacle = ({ position, type, palette }: { position: [number, number, number]; type: number; palette: ReturnType<typeof generateGamePalette> }) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  const trailRef = useRef<THREE.Points>(null);
+  const colors = [palette.primary, palette.secondary, "#ff4444"];
   
   useFrame(() => {
     if (meshRef.current) {
@@ -204,346 +186,223 @@ const UniquePlayer = ({
     }
   });
 
-  const renderGeometry = () => {
-    switch (playerShape % 6) {
-      case 0: return <sphereGeometry args={[size, 32, 32]} />;
-      case 1: return <dodecahedronGeometry args={[size]} />;
-      case 2: return <icosahedronGeometry args={[size]} />;
-      case 3: return <octahedronGeometry args={[size]} />;
-      case 4: return <torusKnotGeometry args={[size * 0.6, size * 0.2, 64, 8]} />;
-      case 5: return <coneGeometry args={[size * 0.8, size * 1.5, 6]} />;
-      default: return <sphereGeometry args={[size, 32, 32]} />;
-    }
-  };
-
-  return (
-    <group>
-      <mesh ref={meshRef} position={position}>
-        {renderGeometry()}
-        <MeshDistortMaterial 
-          color={color} 
-          emissive={color} 
-          emissiveIntensity={0.4} 
-          metalness={0.9} 
-          roughness={0.1}
-          distort={0.2}
-          speed={3}
-        />
-      </mesh>
-      {trail && (
-        <mesh position={[position[0], position[1], position[2] + 0.5]} scale={[0.3, 0.3, 1]}>
-          <coneGeometry args={[0.5, 1.5, 8]} />
-          <meshBasicMaterial color={color} transparent opacity={0.3} />
-        </mesh>
-      )}
-    </group>
-  );
-};
-
-// Unique ring/portal
-const UniqueRing = ({ 
-  position, 
-  color, 
-  speed, 
-  ringType,
-  size
-}: { 
-  position: [number, number, number]; 
-  color: string; 
-  speed: number;
-  ringType: number;
-  size: number;
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  useFrame(() => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += 0.01 * speed;
-      meshRef.current.rotation.y += 0.02 * speed;
-      meshRef.current.rotation.z += 0.005 * speed;
-    }
-  });
-
-  const renderRing = () => {
-    switch (ringType % 4) {
-      case 0:
-        return <torusGeometry args={[size, size * 0.05, 16, 64]} />;
-      case 1:
-        return <torusGeometry args={[size, size * 0.15, 8, 32]} />;
-      case 2:
-        return <torusKnotGeometry args={[size * 0.7, size * 0.1, 64, 8, 2, 3]} />;
-      case 3:
-        return <torusKnotGeometry args={[size * 0.6, size * 0.08, 64, 8, 3, 5]} />;
-      default:
-        return <torusGeometry args={[size, size * 0.05, 16, 64]} />;
-    }
-  };
-
   return (
     <mesh ref={meshRef} position={position}>
-      {renderRing()}
-      <meshStandardMaterial 
-        color={color} 
-        emissive={color} 
-        emissiveIntensity={0.4} 
-        transparent 
-        opacity={0.7}
-        metalness={0.8}
-        roughness={0.2}
-      />
+      {type % 3 === 0 && <boxGeometry args={[0.8, 0.8, 0.8]} />}
+      {type % 3 === 1 && <coneGeometry args={[0.4, 0.8, 8]} />}
+      {type % 3 === 2 && <cylinderGeometry args={[0.3, 0.3, 0.6, 8]} />}
+      <meshStandardMaterial color={colors[type % 3]} />
     </mesh>
   );
 };
 
-// Unique platform
-const UniquePlatform = ({ 
-  position, 
-  color,
-  platformType,
-  size
-}: { 
-  position: [number, number, number]; 
-  color: string;
-  platformType: number;
-  size: number;
-}) => {
+const PowerUp = ({ position, palette, onCollect }: { position: [number, number, number]; palette: ReturnType<typeof generateGamePalette>; onCollect: () => void }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + position[0]) * 0.15;
+      meshRef.current.rotation.y += 0.05;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.2;
     }
   });
 
-  const renderPlatform = () => {
-    switch (platformType % 5) {
-      case 0: return <cylinderGeometry args={[size, size, 0.2, 32]} />;
-      case 1: return <boxGeometry args={[size * 1.5, 0.2, size * 1.5]} />;
-      case 2: return <cylinderGeometry args={[size, size * 0.7, 0.3, 6]} />; // Hexagon
-      case 3: return <cylinderGeometry args={[size * 0.8, size * 1.2, 0.25, 32]} />; // Tapered
-      case 4: return <torusGeometry args={[size * 0.6, size * 0.3, 8, 24]} />;
-      default: return <cylinderGeometry args={[size, size, 0.2, 32]} />;
-    }
-  };
-
   return (
-    <Float speed={1} floatIntensity={0.2}>
-      <mesh ref={meshRef} position={position}>
-        {renderPlatform()}
-        <meshStandardMaterial 
-          color={color} 
-          metalness={0.6} 
-          roughness={0.3}
-          emissive={color}
-          emissiveIntensity={0.1}
-        />
+    <Float speed={2} floatIntensity={0.5}>
+      <mesh ref={meshRef} position={position} onClick={onCollect}>
+        <torusGeometry args={[0.3, 0.1, 16, 32]} />
+        <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.8} />
       </mesh>
     </Float>
   );
 };
 
-// Unique background effect
-const UniqueBackground = ({ gameId, palette }: { gameId: number; palette: ReturnType<typeof generateGamePalette> }) => {
-  const bgType = gameId % 8;
-  
-  switch (bgType) {
-    case 0:
-      return <Stars radius={100} depth={50} count={3000} factor={4} saturation={0.5} fade speed={1} />;
-    case 1:
-      return <Stars radius={50} depth={30} count={5000} factor={2} saturation={1} fade speed={2} />;
-    case 2:
-      return (
-        <>
-          <Stars radius={80} depth={40} count={2000} factor={3} saturation={0.3} fade speed={0.5} />
-          <fog attach="fog" args={[palette.background, 5, 30]} />
-        </>
-      );
-    case 3:
-      return <Stars radius={120} depth={60} count={1500} factor={6} saturation={0.8} fade speed={1.5} />;
-    case 4:
-      return (
-        <>
-          <Stars radius={60} depth={25} count={4000} factor={1.5} saturation={0.2} fade speed={3} />
-        </>
-      );
-    case 5:
-      return <Stars radius={200} depth={100} count={1000} factor={8} saturation={0.6} fade speed={0.3} />;
-    case 6:
-      return (
-        <>
-          <Stars radius={70} depth={35} count={2500} factor={5} saturation={0.9} fade speed={1.2} />
-        </>
-      );
-    case 7:
-      return <Stars radius={40} depth={20} count={6000} factor={1} saturation={0.4} fade speed={4} />;
-    default:
-      return <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />;
-  }
-};
+// ==================== GAME SCENES ====================
 
-// Game scene component
-const GameScene = ({ 
+const ShootingGameScene = ({
   gameId,
-  mechanic, 
-  variant, 
-  isPlaying, 
+  palette,
+  isPlaying,
   playerPos,
-  collectibles,
-  onCollect,
-  obstacles,
-  palette
-}: { 
+  enemies,
+  bullets,
+  onEnemyHit
+}: {
   gameId: number;
-  mechanic: string; 
-  variant: number;
-  isPlaying: boolean;
-  playerPos: { x: number; y: number; z: number };
-  collectibles: Array<{ id: number; x: number; y: number; z: number; collected: boolean }>;
-  onCollect: (id: number) => void;
-  obstacles: Array<{ id: number; x: number; y: number; z: number }>;
   palette: ReturnType<typeof generateGamePalette>;
+  isPlaying: boolean;
+  playerPos: { x: number; y: number };
+  enemies: Enemy[];
+  bullets: Bullet[];
+  onEnemyHit: (id: number) => void;
 }) => {
-  const collectibleShape = (gameId * 7) % 10;
-  const obstacleShape = (gameId * 11) % 5;
-  const playerShape = (gameId * 13) % 6;
-  const ringType = (gameId * 17) % 4;
-  const platformType = (gameId * 19) % 5;
-  const useWobble = gameId % 3 === 0;
-  const useDistort = gameId % 5 === 0;
-  const floatSpeed = 1 + (gameId % 5) * 0.5;
-  const collectibleSize = 0.8 + (gameId % 5) * 0.1;
-  const playerSize = 0.35 + (gameId % 4) * 0.05;
-  const hasTrail = gameId % 2 === 0;
-  
-  // Unique lighting based on game
-  const lightIntensity = 0.3 + (gameId % 5) * 0.1;
-  const pointLightPos1: [number, number, number] = [
-    5 + (gameId % 10),
-    5 + (gameId % 8),
-    5 + (gameId % 6)
-  ];
-  const pointLightPos2: [number, number, number] = [
-    -(5 + (gameId % 8)),
-    -(3 + (gameId % 6)),
-    -(5 + (gameId % 10))
-  ];
+  const bgType = gameId % 5;
   
   return (
     <>
-      <ambientLight intensity={lightIntensity} />
-      <pointLight position={pointLightPos1} intensity={1} color={palette.primary} />
-      <pointLight position={pointLightPos2} intensity={0.6} color={palette.secondary} />
-      <pointLight position={[0, 10, 0]} intensity={0.4} color={palette.accent} />
+      <ambientLight intensity={0.3} />
+      <pointLight position={[10, 10, 10]} intensity={1} color={palette.primary} />
+      <pointLight position={[-10, -10, -10]} intensity={0.5} color={palette.secondary} />
       
-      <UniqueBackground gameId={gameId} palette={palette} />
+      {/* Dynamic backgrounds */}
+      {bgType === 0 && <Stars radius={100} depth={50} count={3000} factor={4} saturation={0} fade speed={2} />}
+      {bgType === 1 && <Stars radius={80} depth={40} count={2000} factor={6} saturation={1} fade speed={1} />}
+      {bgType === 2 && <Stars radius={100} depth={50} count={1500} factor={3} saturation={0.5} fade speed={3} />}
+      {bgType === 3 && <Stars radius={70} depth={35} count={2500} factor={5} saturation={0.9} fade speed={1.2} />}
+      {bgType === 4 && <Stars radius={100} depth={50} count={2500} factor={5} saturation={0.8} fade speed={1.5} />}
       
-      {/* Background rings - unique per game */}
-      <UniqueRing 
-        position={[0, 0, -5 - (gameId % 5)]} 
-        color={palette.primary} 
-        speed={1 + (gameId % 10) * 0.1} 
-        ringType={ringType}
-        size={1.5 + (gameId % 5) * 0.3}
-      />
-      <UniqueRing 
-        position={[0, 0, -8 - (gameId % 4)]} 
-        color={palette.secondary} 
-        speed={0.8 + (gameId % 8) * 0.1}
-        ringType={(ringType + 1) % 4}
-        size={2 + (gameId % 4) * 0.4}
-      />
-      {gameId % 3 === 0 && (
-        <UniqueRing 
-          position={[0, 0, -12]} 
-          color={palette.accent} 
-          speed={0.5}
-          ringType={(ringType + 2) % 4}
-          size={2.5}
-        />
-      )}
+      {/* Player ship */}
+      {isPlaying && <PlayerShip position={playerPos} palette={palette} />}
       
-      {/* Player */}
-      {isPlaying && (
-        <UniquePlayer 
-          position={[playerPos.x, playerPos.y, playerPos.z]} 
-          color={palette.glow}
-          playerShape={playerShape}
-          size={playerSize}
-          trail={hasTrail}
-        />
-      )}
-      
-      {/* Collectibles */}
-      {isPlaying && collectibles.filter(c => !c.collected).map((c, idx) => (
-        <UniqueCollectible 
-          key={c.id}
-          position={[c.x, c.y, c.z]}
-          onClick={() => onCollect(c.id)}
-          color={idx % 2 === 0 ? palette.primary : palette.secondary}
-          shapeType={(collectibleShape + idx) % 10}
-          wobble={useWobble}
-          distort={useDistort}
-          floatSpeed={floatSpeed}
-          size={collectibleSize}
-        />
+      {/* Enemies */}
+      {isPlaying && enemies.map(enemy => (
+        <EnemyShip key={enemy.id} enemy={enemy} palette={palette} onHit={() => onEnemyHit(enemy.id)} />
       ))}
       
-      {/* Obstacles */}
-      {isPlaying && obstacles.map((o, idx) => (
-        <UniqueObstacle
-          key={o.id}
-          position={[o.x, o.y, o.z]}
-          color={palette.accent}
-          speed={0.8 + (gameId % 5) * 0.2}
-          pattern={(gameId + idx) % 6}
-          shapeType={(obstacleShape + idx) % 5}
-          size={0.5 + (gameId % 3) * 0.2}
-        />
+      {/* Bullets */}
+      {isPlaying && bullets.map(bullet => (
+        <BulletMesh key={bullet.id} bullet={bullet} palette={palette} />
       ))}
       
-      {/* Platforms */}
-      {(mechanic === 'platformJump' || mechanic === 'pyramidClimb' || gameId % 4 === 0) && (
-        <>
-          <UniquePlatform position={[-2, -1, 0]} color={palette.primary} platformType={platformType} size={0.8} />
-          <UniquePlatform position={[0, 0, 0]} color={palette.secondary} platformType={(platformType + 1) % 5} size={0.7} />
-          <UniquePlatform position={[2, 1, 0]} color={palette.accent} platformType={(platformType + 2) % 5} size={0.9} />
-          <UniquePlatform position={[0, 2, 0]} color={palette.primary} platformType={(platformType + 3) % 5} size={0.6} />
-        </>
-      )}
-      
-      <OrbitControls 
-        enableZoom={false} 
-        enablePan={false} 
-        autoRotate={!isPlaying} 
-        autoRotateSpeed={1 + (gameId % 5)}
-        maxPolarAngle={Math.PI * 0.7}
-        minPolarAngle={Math.PI * 0.3}
-      />
+      <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
     </>
   );
 };
 
-const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, category, emoji, name, themeColor }, ref) => {
-  const mechanic = game3DMechanics[gameId % game3DMechanics.length];
-  const variant = Math.floor(gameId / game3DMechanics.length) % 10;
-  const speedMod = 1 + (gameId % 5) * 0.2;
-  const targetScore = 10 + (gameId % 20);
-  const timeLimit = 20 + (gameId % 40);
+const RacingGameScene = ({
+  gameId,
+  palette,
+  isPlaying,
+  playerLane,
+  playerZ,
+  obstacles,
+  powerUps,
+  onPowerUpCollect,
+  speed
+}: {
+  gameId: number;
+  palette: ReturnType<typeof generateGamePalette>;
+  isPlaying: boolean;
+  playerLane: number;
+  playerZ: number;
+  obstacles: Array<{ id: number; x: number; z: number; type: number }>;
+  powerUps: Array<{ id: number; x: number; z: number; type: number }>;
+  onPowerUpCollect: (id: number) => void;
+  speed: number;
+}) => {
+  const lanePositions = [-2.5, 0, 2.5];
+  const trackVariant = gameId % 4;
   
-  const palette = useMemo(() => generateGamePalette(gameId), [gameId]);
+  return (
+    <>
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[5, 10, 5]} intensity={1} />
+      <pointLight position={[0, 5, 0]} intensity={0.5} color={palette.accent} />
+      
+      {/* Sky/Background based on variant */}
+      {trackVariant === 0 && <Stars radius={100} depth={50} count={2000} factor={4} fade speed={1} />}
+      {trackVariant === 1 && (
+        <mesh>
+          <sphereGeometry args={[100, 32, 32]} />
+          <meshBasicMaterial color="#1a0a2e" side={THREE.BackSide} />
+        </mesh>
+      )}
+      {trackVariant === 2 && (
+        <mesh>
+          <sphereGeometry args={[100, 32, 32]} />
+          <meshBasicMaterial color="#0a1a1a" side={THREE.BackSide} />
+        </mesh>
+      )}
+      {trackVariant === 3 && (
+        <>
+          <Stars radius={80} depth={40} count={3000} factor={3} saturation={1} fade speed={2} />
+          <mesh>
+            <sphereGeometry args={[100, 32, 32]} />
+            <meshBasicMaterial color={palette.bg1} side={THREE.BackSide} />
+          </mesh>
+        </>
+      )}
+      
+      {/* Track */}
+      <RaceTrack palette={palette} trackLength={200} />
+      
+      {/* Player car */}
+      {isPlaying && (
+        <CarModel 
+          position={[lanePositions[playerLane], -0.7, 2]} 
+          color={palette.accent} 
+          isPlayer 
+        />
+      )}
+      
+      {/* Obstacles */}
+      {isPlaying && obstacles.map(obs => (
+        <RaceObstacle 
+          key={obs.id} 
+          position={[obs.x, -0.5, obs.z - playerZ]} 
+          type={obs.type} 
+          palette={palette} 
+        />
+      ))}
+      
+      {/* Power-ups */}
+      {isPlaying && powerUps.map(pu => (
+        <PowerUp 
+          key={pu.id} 
+          position={[pu.x, 0, pu.z - playerZ]} 
+          palette={palette}
+          onCollect={() => onPowerUpCollect(pu.id)}
+        />
+      ))}
+      
+      {/* Speed lines effect */}
+      {isPlaying && speed > 1.5 && (
+        <group>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <mesh key={i} position={[(Math.random() - 0.5) * 8, (Math.random() - 0.5) * 4, -5 - i * 3]}>
+              <boxGeometry args={[0.02, 0.02, 2]} />
+              <meshBasicMaterial color="white" transparent opacity={0.5} />
+            </mesh>
+          ))}
+        </group>
+      )}
+      
+      <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
+    </>
+  );
+};
+
+// ==================== MAIN COMPONENT ====================
+
+const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, category, emoji, name, themeColor }, ref) => {
+  const gameType = getGameType(gameId);
+  const palette = generateGamePalette(gameId);
+  const variant = Math.floor(gameId / 2) % 20;
+  const baseSpeed = 1 + (gameId % 10) * 0.1;
+  const baseDifficulty = 1 + (gameId % 5) * 0.2;
+  const timeLimit = 30 + (gameId % 30);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [gameOver, setGameOver] = useState(false);
-  const [playerPos, setPlayerPos] = useState({ x: 0, y: 0, z: 2 });
-  const [collectibles, setCollectibles] = useState<Array<{ id: number; x: number; y: number; z: number; collected: boolean }>>([]);
-  const [obstacles, setObstacles] = useState<Array<{ id: number; x: number; y: number; z: number }>>([]);
 
-  // Timer effect
+  // Shooting game state
+  const [playerPos, setPlayerPos] = useState({ x: 0, y: 0 });
+  const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [bullets, setBullets] = useState<Bullet[]>([]);
+
+  // Racing game state
+  const [playerLane, setPlayerLane] = useState(1);
+  const [playerZ, setPlayerZ] = useState(0);
+  const [speed, setSpeed] = useState(baseSpeed);
+  const [obstacles, setObstacles] = useState<Array<{ id: number; x: number; z: number; type: number }>>([]);
+  const [powerUps, setPowerUps] = useState<Array<{ id: number; x: number; z: number; type: number }>>([]);
+
+  const lanePositions = [-2.5, 0, 2.5];
+
+  // Timer
   useEffect(() => {
     if (!isPlaying || gameOver) return;
-    
     const timer = setInterval(() => {
       setTimeLeft(t => {
         if (t <= 1) {
@@ -554,7 +413,6 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
         return t - 1;
       });
     }, 1000);
-    
     return () => clearInterval(timer);
   }, [isPlaying, gameOver]);
 
@@ -563,71 +421,178 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
     if (!isPlaying) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      const speed = 0.4;
-      switch (e.key) {
-        case 'ArrowLeft':
-        case 'a':
-          setPlayerPos(p => ({ ...p, x: Math.max(-4, p.x - speed) }));
-          break;
-        case 'ArrowRight':
-        case 'd':
-          setPlayerPos(p => ({ ...p, x: Math.min(4, p.x + speed) }));
-          break;
-        case 'ArrowUp':
-        case 'w':
-          setPlayerPos(p => ({ ...p, y: Math.min(3, p.y + speed) }));
-          break;
-        case 'ArrowDown':
-        case 's':
-          setPlayerPos(p => ({ ...p, y: Math.max(-3, p.y - speed) }));
-          break;
+      if (gameType === 0) {
+        // Shooting controls
+        const moveSpeed = 0.3;
+        switch (e.key) {
+          case 'ArrowLeft':
+          case 'a':
+            setPlayerPos(p => ({ ...p, x: Math.max(-4, p.x - moveSpeed) }));
+            break;
+          case 'ArrowRight':
+          case 'd':
+            setPlayerPos(p => ({ ...p, x: Math.min(4, p.x + moveSpeed) }));
+            break;
+          case 'ArrowUp':
+          case 'w':
+            setPlayerPos(p => ({ ...p, y: Math.min(3, p.y + moveSpeed) }));
+            break;
+          case 'ArrowDown':
+          case 's':
+            setPlayerPos(p => ({ ...p, y: Math.max(-3, p.y - moveSpeed) }));
+            break;
+          case ' ':
+            e.preventDefault();
+            // Fire bullet
+            setBullets(prev => [...prev, {
+              id: Date.now(),
+              x: playerPos.x,
+              y: playerPos.y,
+              z: 2
+            }]);
+            break;
+        }
+      } else {
+        // Racing controls
+        switch (e.key) {
+          case 'ArrowLeft':
+          case 'a':
+            setPlayerLane(l => Math.max(0, l - 1));
+            break;
+          case 'ArrowRight':
+          case 'd':
+            setPlayerLane(l => Math.min(2, l + 1));
+            break;
+          case 'ArrowUp':
+          case 'w':
+            setSpeed(s => Math.min(3, s + 0.1));
+            break;
+          case 'ArrowDown':
+          case 's':
+            setSpeed(s => Math.max(0.5, s - 0.1));
+            break;
+        }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying]);
+  }, [isPlaying, gameType, playerPos]);
 
-  // Spawn collectibles periodically
+  // Shooting game: spawn enemies
   useEffect(() => {
-    if (!isPlaying || gameOver) return;
-    
+    if (!isPlaying || gameOver || gameType !== 0) return;
     const spawnInterval = setInterval(() => {
-      if (collectibles.filter(c => !c.collected).length < 4 + variant) {
-        setCollectibles(prev => [...prev, {
+      if (enemies.length < 5 + variant) {
+        setEnemies(prev => [...prev, {
           id: Date.now() + Math.random(),
-          x: (Math.random() - 0.5) * 7,
+          x: (Math.random() - 0.5) * 8,
           y: (Math.random() - 0.5) * 5,
-          z: (Math.random() - 0.5) * 3,
-          collected: false
+          z: -20 - Math.random() * 10,
+          type: Math.floor(Math.random() * 4),
+          speed: baseSpeed + Math.random() * baseDifficulty
         }]);
       }
-    }, 1800 / speedMod);
-    
+    }, 2000 / baseDifficulty);
     return () => clearInterval(spawnInterval);
-  }, [isPlaying, gameOver, collectibles.length, variant, speedMod]);
+  }, [isPlaying, gameOver, gameType, enemies.length, variant, baseSpeed, baseDifficulty]);
 
-  // Spawn obstacles
+  // Shooting game: update bullets and check collisions
   useEffect(() => {
-    if (!isPlaying || gameOver) return;
-    
-    const spawnInterval = setInterval(() => {
-      if (obstacles.length < 3 + (gameId % 3)) {
-        setObstacles(prev => [...prev, {
-          id: Date.now() + Math.random(),
-          x: (Math.random() - 0.5) * 6,
-          y: (Math.random() - 0.5) * 4,
-          z: (Math.random() - 0.5) * 2
+    if (!isPlaying || gameOver || gameType !== 0) return;
+    const updateInterval = setInterval(() => {
+      // Move bullets
+      setBullets(prev => prev.map(b => ({ ...b, z: b.z - 0.5 })).filter(b => b.z > -30));
+      
+      // Check bullet-enemy collisions
+      setBullets(prevBullets => {
+        const remainingBullets = [...prevBullets];
+        setEnemies(prevEnemies => {
+          return prevEnemies.filter(enemy => {
+            const hit = remainingBullets.some((bullet, idx) => {
+              const dist = Math.sqrt(
+                Math.pow(bullet.x - enemy.x, 2) +
+                Math.pow(bullet.y - enemy.y, 2) +
+                Math.pow(bullet.z - enemy.z, 2)
+              );
+              if (dist < 1.2) {
+                remainingBullets.splice(idx, 1);
+                setScore(s => s + 10);
+                return true;
+              }
+              return false;
+            });
+            return !hit;
+          });
+        });
+        return remainingBullets;
+      });
+      
+      // Move enemies forward
+      setEnemies(prev => {
+        const updated = prev.map(e => ({ ...e, z: e.z + e.speed * 0.05 }));
+        updated.forEach(e => {
+          if (e.z > 3) {
+            setGameOver(true);
+            setIsPlaying(false);
+          }
+        });
+        return updated.filter(e => e.z < 5);
+      });
+    }, 50);
+    return () => clearInterval(updateInterval);
+  }, [isPlaying, gameOver, gameType]);
+
+  // Racing game: move forward and spawn obstacles
+  useEffect(() => {
+    if (!isPlaying || gameOver || gameType !== 1) return;
+    const moveInterval = setInterval(() => {
+      setPlayerZ(z => z + speed * 0.5);
+      setScore(s => s + Math.floor(speed));
+      
+      // Spawn obstacles
+      if (Math.random() < 0.05 * baseDifficulty) {
+        const lane = Math.floor(Math.random() * 3);
+        setObstacles(prev => [...prev.slice(-10), {
+          id: Date.now(),
+          x: lanePositions[lane],
+          z: playerZ + 50 + Math.random() * 20,
+          type: Math.floor(Math.random() * 3)
         }]);
       }
-    }, 3000 / speedMod);
-    
-    return () => clearInterval(spawnInterval);
-  }, [isPlaying, gameOver, obstacles.length, gameId, speedMod]);
+      
+      // Spawn power-ups
+      if (Math.random() < 0.02) {
+        const lane = Math.floor(Math.random() * 3);
+        setPowerUps(prev => [...prev.slice(-5), {
+          id: Date.now(),
+          x: lanePositions[lane],
+          z: playerZ + 60 + Math.random() * 20,
+          type: Math.floor(Math.random() * 2)
+        }]);
+      }
+      
+      // Check collisions with obstacles
+      obstacles.forEach(obs => {
+        const relZ = obs.z - playerZ;
+        if (relZ > 0 && relZ < 3 && Math.abs(obs.x - lanePositions[playerLane]) < 1) {
+          setGameOver(true);
+          setIsPlaying(false);
+        }
+      });
+    }, 50);
+    return () => clearInterval(moveInterval);
+  }, [isPlaying, gameOver, gameType, speed, playerZ, playerLane, obstacles, baseDifficulty, lanePositions]);
 
-  const handleCollect = (id: number) => {
-    setCollectibles(prev => prev.map(c => c.id === id ? { ...c, collected: true } : c));
-    setScore(s => s + 1 + (gameId % 3));
+  const handleEnemyHit = (id: number) => {
+    setEnemies(prev => prev.filter(e => e.id !== id));
+    setScore(s => s + 15);
+  };
+
+  const handlePowerUpCollect = (id: number) => {
+    setPowerUps(prev => prev.filter(p => p.id !== id));
+    setScore(s => s + 50);
+    setSpeed(s => Math.min(3, s + 0.3));
   };
 
   const startGame = () => {
@@ -635,89 +600,80 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
     setScore(0);
     setTimeLeft(timeLimit);
     setGameOver(false);
-    setPlayerPos({ x: 0, y: 0, z: 2 });
+    setPlayerPos({ x: 0, y: 0 });
+    setEnemies([]);
+    setBullets([]);
+    setPlayerLane(1);
+    setPlayerZ(0);
+    setSpeed(baseSpeed);
     setObstacles([]);
-    
-    // Initial collectibles with varied positions based on gameId
-    const initialCollectibles = Array.from({ length: 3 + variant }, (_, i) => ({
-      id: i,
-      x: (Math.random() - 0.5) * 7,
-      y: (Math.random() - 0.5) * 5,
-      z: (Math.random() - 0.5) * 3,
-      collected: false
-    }));
-    setCollectibles(initialCollectibles);
+    setPowerUps([]);
   };
 
-  const getInstructions = () => {
-    const base = [
-      'Collect the floating shapes! Click or use WASD to move.',
-      'Gather all crystals before time runs out!',
-      'Navigate through space and collect orbs!',
-      'Dodge obstacles while collecting gems!',
-      'Jump between platforms and collect stars!',
-      'Race to collect as many shapes as possible!',
-      'Avoid the wireframe obstacles!',
-      'Master the cosmic playground!'
-    ];
-    return base[gameId % base.length];
-  };
+  const gameTypeLabel = gameType === 0 ? "🎯 SPACE SHOOTER" : "🏎️ RACING";
+  const instructions = gameType === 0 
+    ? "WASD to move, SPACE to shoot! Destroy enemies before they reach you!"
+    : "A/D or ←/→ to change lanes, W/S to speed up/slow down! Avoid obstacles!";
 
   return (
     <div ref={ref} className="flex flex-col items-center p-4">
-      <div className="flex justify-between w-full mb-4">
-        <span className="font-display" style={{ color: palette.primary }}>
-          Score: {score}
-        </span>
-        <span className="text-muted-foreground">
-          ⏱️ {timeLeft}s
-        </span>
+      <div className="flex justify-between w-full mb-2">
+        <span className="font-display text-primary">Score: {score}</span>
+        <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary">{gameTypeLabel}</span>
+        <span className="text-muted-foreground">⏱️ {timeLeft}s</span>
       </div>
 
-      <div 
-        className="w-full aspect-video rounded-xl overflow-hidden border-2 shadow-lg"
-        style={{ 
-          borderColor: palette.primary,
-          boxShadow: `0 0 30px ${palette.primary}40`
-        }}
-      >
-        <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
-          <Suspense fallback={null}>
-            <color attach="background" args={[palette.background]} />
-            <GameScene
-              gameId={gameId}
-              mechanic={mechanic}
-              variant={variant}
-              isPlaying={isPlaying}
-              playerPos={playerPos}
-              collectibles={collectibles}
-              onCollect={handleCollect}
-              obstacles={obstacles}
-              palette={palette}
+      {gameType === 1 && isPlaying && (
+        <div className="w-full mb-2 flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Speed:</span>
+          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all" 
+              style={{ width: `${(speed / 3) * 100}%` }}
             />
+          </div>
+        </div>
+      )}
+
+      <div className="w-full aspect-video bg-black/90 rounded-xl overflow-hidden border-2 border-primary/30 shadow-lg shadow-primary/20">
+        <Canvas camera={{ position: gameType === 0 ? [0, 0, 8] : [0, 3, 8], fov: 60 }}>
+          <Suspense fallback={null}>
+            {gameType === 0 ? (
+              <ShootingGameScene
+                gameId={gameId}
+                palette={palette}
+                isPlaying={isPlaying}
+                playerPos={playerPos}
+                enemies={enemies}
+                bullets={bullets}
+                onEnemyHit={handleEnemyHit}
+              />
+            ) : (
+              <RacingGameScene
+                gameId={gameId}
+                palette={palette}
+                isPlaying={isPlaying}
+                playerLane={playerLane}
+                playerZ={playerZ}
+                obstacles={obstacles}
+                powerUps={powerUps}
+                onPowerUpCollect={handlePowerUpCollect}
+                speed={speed}
+              />
+            )}
           </Suspense>
         </Canvas>
       </div>
 
-      <p className="text-sm text-muted-foreground mt-4 text-center">
-        {getInstructions()}
-      </p>
+      <p className="text-sm text-muted-foreground mt-4 text-center">{instructions}</p>
       
-      <p className="text-xs mt-1" style={{ color: palette.secondary }}>
-        Mechanic: <span style={{ color: palette.primary }}>{mechanic}</span> | 
-        Variant: {variant + 1} | 
-        Style: #{gameId % 100}
+      <p className="text-xs text-muted-foreground mt-1">
+        Variant: <span className="text-primary">{variant + 1}</span> | 
+        Difficulty: <span className="text-primary">{baseDifficulty.toFixed(1)}x</span>
       </p>
 
       {!isPlaying && (
-        <Button 
-          onClick={startGame}
-          className="mt-4"
-          style={{ 
-            background: `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})`,
-            border: 'none'
-          }}
-        >
+        <Button onClick={startGame} className="mt-4">
           {gameOver ? `🔄 Play Again (Score: ${score})` : '🎮 Start Game'}
         </Button>
       )}
