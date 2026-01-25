@@ -1,10 +1,10 @@
 import DynamicGame from "../DynamicGame";
 import { generateGameName, getGameEmoji } from "../gameGenerators";
 
-// Generate 1000 unique Spring games
+// Generate 2000 unique Spring games
 const springGames: { id: string; name: string; emoji: string; component: React.ReactNode }[] = [];
 
-for (let i = 0; i < 1000; i++) {
+for (let i = 0; i < 2000; i++) {
   const id = `spring-game-${i + 1}`;
   const name = generateGameName('spring', i);
   const emoji = getGameEmoji('spring', i);

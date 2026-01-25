@@ -55,10 +55,10 @@ const get3DGameEmoji = (index: number): string => {
   }
 };
 
-// Generate 1000 unique 3D games
+// Generate 2000 unique 3D games
 const threeDGames: { id: string; name: string; emoji: string; component: React.ReactNode }[] = [];
 
-for (let i = 0; i < 1000; i++) {
+for (let i = 0; i < 2000; i++) {
   const id = `3d-game-${i + 1}`;
   const name = generate3DGameName(i);
   const emoji = get3DGameEmoji(i);

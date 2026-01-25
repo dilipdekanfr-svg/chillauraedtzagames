@@ -90,7 +90,7 @@ const GameSection = () => {
           🎮 Play Games 🎮
         </h2>
         <p className="text-center text-muted-foreground mb-8">
-          Choose a category and enjoy <span className={styles.text}>1000 unique games</span> per section! 
+          Choose a category and enjoy <span className={styles.text}>2000 unique games</span> per section! 
           <span className="text-purple-500 font-bold"> Now with crazy 3D games! 🚀</span>
         </p>
 
