@@ -1,10 +1,10 @@
 import DynamicGame from "../DynamicGame";
 import { generateGameName, getGameEmoji } from "../gameGenerators";
 
-// Generate 2000 unique Normal games
+// Generate 6000 unique Normal games
 const normalGames: { id: string; name: string; emoji: string; component: React.ReactNode }[] = [];
 
-for (let i = 0; i < 2000; i++) {
+for (let i = 0; i < 6000; i++) {
   const id = `normal-game-${i + 1}`;
   const name = generateGameName('normal', i);
   const emoji = getGameEmoji('normal', i);
