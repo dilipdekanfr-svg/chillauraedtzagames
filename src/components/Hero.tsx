@@ -37,13 +37,30 @@ const Hero = () => {
         </p>
 
         {/* Stats */}
-        <div className="flex gap-6 text-sm text-muted-foreground">
-          <span className="px-4 py-2 bg-card rounded-full border border-border">
-            294+ Subscribers
-          </span>
-          <span className="px-4 py-2 bg-card rounded-full border border-border">
-            242+ Videos
-          </span>
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-6 text-sm text-muted-foreground">
+            <span className="px-4 py-2 bg-card rounded-full border border-border">
+              294+ Subscribers
+            </span>
+            <span className="px-4 py-2 bg-card rounded-full border border-border">
+              242+ Videos
+            </span>
+          </div>
+          
+          {/* Subscribe Button */}
+          <a
+            href="https://www.youtube.com/channel/UCqFrLH6FGpTr8PyMLvlDz7w?sub_confirmation=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-3 bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold rounded-full 
+              transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-[#FF0000]/30
+              flex items-center gap-2 animate-pulse hover:animate-none"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.5 6.5a3.07 3.07 0 0 0-2.16-2.17C19.54 4 12 4 12 4s-7.54 0-9.34.33A3.07 3.07 0 0 0 .5 6.5 32.16 32.16 0 0 0 0 12a32.16 32.16 0 0 0 .5 5.5 3.07 3.07 0 0 0 2.16 2.17c1.8.33 9.34.33 9.34.33s7.54 0 9.34-.33a3.07 3.07 0 0 0 2.16-2.17A32.16 32.16 0 0 0 24 12a32.16 32.16 0 0 0-.5-5.5zM9.6 15.6V8.4l6.24 3.6-6.24 3.6z"/>
+            </svg>
+            Subscribe
+          </a>
         </div>
       </div>
     </section>
