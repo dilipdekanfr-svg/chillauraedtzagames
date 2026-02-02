@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, forwardRef, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars, Float } from "@react-three/drei";
 import { Button } from "@/components/ui/button";
+import { useAchievements } from "@/contexts/AchievementsContext";
 import * as THREE from "three";
 
 interface Dynamic3DGameProps {
@@ -374,6 +375,7 @@ const RacingGameScene = ({
 // ==================== MAIN COMPONENT ====================
 
 const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, category, emoji, name, themeColor }, ref) => {
+  const { trackGamePlay } = useAchievements();
   const gameType = getGameType(gameId);
   const palette = generateGamePalette(gameId);
   const variant = Math.floor(gameId / 2) % 20;
@@ -608,6 +610,7 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
     setSpeed(baseSpeed);
     setObstacles([]);
     setPowerUps([]);
+    trackGamePlay(true);
   };
 
   const gameTypeLabel = gameType === 0 ? "🎯 SPACE SHOOTER" : "🏎️ RACING";

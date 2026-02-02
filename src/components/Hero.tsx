@@ -1,6 +1,14 @@
 import profileImage from "@/assets/chillaura-profile.png";
+import { useAchievements } from "@/contexts/AchievementsContext";
+import AchievementsIndex from "@/components/AchievementsIndex";
 
 const Hero = () => {
+  const { trackSubscribeClick } = useAchievements();
+
+  const handleSubscribeClick = () => {
+    trackSubscribeClick();
+  };
+
   return (
     <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
       {/* Animated background elements */}
@@ -52,8 +60,9 @@ const Hero = () => {
             href="https://www.youtube.com/channel/UCqFrLH6FGpTr8PyMLvlDz7w?sub_confirmation=1"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-8 py-3 bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold rounded-full 
-              transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-[#FF0000]/30
+            onClick={handleSubscribeClick}
+            className="px-8 py-3 bg-destructive hover:bg-destructive/80 text-destructive-foreground font-bold rounded-full 
+              transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-destructive/30
               flex items-center gap-2 animate-pulse hover:animate-none"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -61,6 +70,9 @@ const Hero = () => {
             </svg>
             Subscribe
           </a>
+
+          {/* Achievements Button */}
+          <AchievementsIndex />
         </div>
       </div>
     </section>
