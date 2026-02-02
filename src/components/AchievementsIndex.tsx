@@ -50,7 +50,7 @@ const AchievementCard = ({ achievement }: { achievement: Achievement }) => {
 };
 
 const AchievementsIndex = () => {
-  const { achievements, gamesPlayed, games3DPlayed } = useAchievements();
+  const { achievements, gamesPlayed, games3DPlayed, unlockOwnerGreeting, ownerGreeting } = useAchievements();
   
   const unlockedCount = achievements.filter(a => a.unlocked).length;
   const totalCount = achievements.length;
@@ -109,6 +109,26 @@ const AchievementsIndex = () => {
             <p className="text-xs text-muted-foreground">3D Games Played</p>
           </div>
         </div>
+
+        {/* Owner Greeting Unlock Button */}
+        {!ownerGreeting && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg border border-yellow-500/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-yellow-500 flex items-center gap-2">
+                  ✨ Premium Achievement
+                </h4>
+                <p className="text-sm text-muted-foreground">Click to unlock the Owner Greeting!</p>
+              </div>
+              <Button 
+                onClick={unlockOwnerGreeting}
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold"
+              >
+                Unlock Greeting
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Achievement categories */}
         <div className="space-y-6">
