@@ -55,7 +55,23 @@ const defaultAchievements: Achievement[] = [
 export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
     const saved = localStorage.getItem('achievements');
-    return saved ? JSON.parse(saved) : defaultAchievements;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as Achievement[];
+        // Restore Date objects and merge with defaults (in case new achievements were added)
+        const restoredAchievements = parsed.map(a => ({
+          ...a,
+          unlockedAt: a.unlockedAt ? new Date(a.unlockedAt) : undefined
+        }));
+        // Merge: keep saved progress, add any new default achievements
+        const savedIds = new Set(restoredAchievements.map(a => a.id));
+        const newAchievements = defaultAchievements.filter(a => !savedIds.has(a.id));
+        return [...restoredAchievements, ...newAchievements];
+      } catch {
+        return defaultAchievements;
+      }
+    }
+    return defaultAchievements;
   });
   
   const [gamesPlayed, setGamesPlayed] = useState<number>(() => {
