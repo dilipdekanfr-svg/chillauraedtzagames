@@ -21,7 +21,7 @@ const gameMechanics = [
 ];
 
 const DynamicGame = forwardRef<HTMLDivElement, DynamicGameProps>(({ gameId, category, emoji, name, themeColor }, ref) => {
-  const { trackGamePlay } = useAchievements();
+  const { trackGamePlay, tryGreyGameAchievement } = useAchievements();
   const mechanic = gameMechanics[gameId % gameMechanics.length];
   const variant = Math.floor(gameId / gameMechanics.length) % 10;
   const speedMod = 1 + (gameId % 5) * 0.2;
@@ -135,7 +135,8 @@ const DynamicGame = forwardRef<HTMLDivElement, DynamicGameProps>(({ gameId, cate
     setSequence([]);
     setPlayerSequence([]);
     setShowing(-1);
-    trackGamePlay(false);
+    tryGreyGameAchievement();
+    trackGamePlay(category);
     
     if (mechanic === 'memorySequence' || mechanic === 'simonSays') {
       const newSeq = Array.from({ length: 3 + variant }, () => Math.floor(Math.random() * 4));
