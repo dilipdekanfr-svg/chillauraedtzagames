@@ -375,7 +375,7 @@ const RacingGameScene = ({
 // ==================== MAIN COMPONENT ====================
 
 const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, category, emoji, name, themeColor }, ref) => {
-  const { trackGamePlay } = useAchievements();
+  const { trackGamePlay, tryGreyGameAchievement } = useAchievements();
   const gameType = getGameType(gameId);
   const palette = generateGamePalette(gameId);
   const variant = Math.floor(gameId / 2) % 20;
@@ -610,7 +610,8 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
     setSpeed(baseSpeed);
     setObstacles([]);
     setPowerUps([]);
-    trackGamePlay(true);
+    tryGreyGameAchievement();
+    trackGamePlay('3d');
   };
 
   const gameTypeLabel = gameType === 0 ? "🎯 SPACE SHOOTER" : "🏎️ RACING";

@@ -11,15 +11,26 @@ export interface Achievement {
   unlockedAt?: Date;
 }
 
+interface CategoryCounts {
+  normal: number;
+  '3d': number;
+  christmas: number;
+  halloween: number;
+  spring: number;
+  autumn: number;
+}
+
 interface AchievementsContextType {
   achievements: Achievement[];
   gamesPlayed: number;
   games3DPlayed: number;
+  categoryCounts: CategoryCounts;
   subscribeClicked: boolean;
   ownerGreeting: boolean;
-  trackGamePlay: (is3D?: boolean) => void;
+  trackGamePlay: (category?: string) => void;
   trackSubscribeClick: () => void;
   unlockOwnerGreeting: () => void;
+  tryGreyGameAchievement: () => boolean;
   newlyUnlocked: Achievement | null;
   clearNewlyUnlocked: () => void;
 }
@@ -43,6 +54,12 @@ const defaultAchievements: Achievement[] = [
   
   // Premium achievements
   { id: 'owner-greeting', name: 'Owner Greeting', description: 'Ask the YouTuber for this!', emoji: '✨', category: 'premium', requirement: 'owner', unlocked: false },
+  
+  // Special achievements
+  { id: 'all-rounder', name: '●●●', description: 'Play 6 games each of 3D, Christmas, Halloween, Spring, Autumn & Normal', emoji: '🌐', category: 'normal', requirement: 'all-categories', unlocked: false },
+  { id: 'grey-one', name: 'THE GREY ONE', description: '1% chance when clicking a game', emoji: '🩶', category: 'premium', requirement: 'grey', unlocked: false },
+  { id: 'enlightenment', name: 'Enlightenment', description: 'Press the 1 key', emoji: '💡', category: 'premium', requirement: '1-key', unlocked: false },
+  { id: 'hacker', name: 'HACKER', description: 'Unlock every other achievement', emoji: '👾', category: 'premium', requirement: 'all', unlocked: false },
   
   // Event achievements
   { id: 'merry-christmas', name: 'Merry Christmas', description: 'Open the website on Christmas', emoji: '🎄', category: 'event', requirement: '12-25', unlocked: false },
@@ -82,6 +99,18 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     return parseInt(localStorage.getItem('games3DPlayed') || '0', 10);
   });
   
+  const [categoryCounts, setCategoryCounts] = useState<CategoryCounts>(() => {
+    const saved = localStorage.getItem('categoryCounts');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return { normal: 0, '3d': 0, christmas: 0, halloween: 0, spring: 0, autumn: 0 };
+      }
+    }
+    return { normal: 0, '3d': 0, christmas: 0, halloween: 0, spring: 0, autumn: 0 };
+  });
+  
   const [subscribeClicked, setSubscribeClicked] = useState<boolean>(() => {
     return localStorage.getItem('subscribeClicked') === 'true';
   });
@@ -104,6 +133,10 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
   useEffect(() => {
     localStorage.setItem('games3DPlayed', games3DPlayed.toString());
   }, [games3DPlayed]);
+  
+  useEffect(() => {
+    localStorage.setItem('categoryCounts', JSON.stringify(categoryCounts));
+  }, [categoryCounts]);
   
   useEffect(() => {
     localStorage.setItem('subscribeClicked', subscribeClicked.toString());
@@ -130,7 +163,7 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     });
   }, []);
 
-  const checkGameAchievements = useCallback((totalGames: number, total3DGames: number) => {
+  const checkGameAchievements = useCallback((totalGames: number, total3DGames: number, counts: CategoryCounts) => {
     // Normal game achievements
     if (totalGames >= 10) unlockAchievement('easy-gamer');
     if (totalGames >= 50) unlockAchievement('medium-gamer');
@@ -141,20 +174,62 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (total3DGames >= 10) unlockAchievement('3d-gamer');
     if (total3DGames >= 100) unlockAchievement('3d-elite');
     if (total3DGames >= 1000) unlockAchievement('3d-master');
+    
+    // All-rounder achievement (●●●)
+    if (counts.normal >= 6 && counts['3d'] >= 6 && counts.christmas >= 6 && 
+        counts.halloween >= 6 && counts.spring >= 6 && counts.autumn >= 6) {
+      unlockAchievement('all-rounder');
+    }
   }, [unlockAchievement]);
 
-  const trackGamePlay = useCallback((is3D: boolean = false) => {
+  const checkHackerAchievement = useCallback(() => {
+    setAchievements(prev => {
+      const nonHackerAchievements = prev.filter(a => a.id !== 'hacker');
+      const allUnlocked = nonHackerAchievements.every(a => a.unlocked);
+      if (allUnlocked) {
+        const hackerAchievement = prev.find(a => a.id === 'hacker');
+        if (hackerAchievement && !hackerAchievement.unlocked) {
+          const updated = prev.map(a => 
+            a.id === 'hacker' ? { ...a, unlocked: true, unlockedAt: new Date() } : a
+          );
+          setNewlyUnlocked(updated.find(a => a.id === 'hacker')!);
+          return updated;
+        }
+      }
+      return prev;
+    });
+  }, []);
+
+  const trackGamePlay = useCallback((category: string = 'normal') => {
     const newTotal = gamesPlayed + 1;
     setGamesPlayed(newTotal);
     
     let new3DTotal = games3DPlayed;
-    if (is3D) {
+    if (category === '3d') {
       new3DTotal = games3DPlayed + 1;
       setGames3DPlayed(new3DTotal);
     }
     
-    checkGameAchievements(newTotal, new3DTotal);
-  }, [gamesPlayed, games3DPlayed, checkGameAchievements]);
+    // Update category counts
+    const validCategory = category as keyof CategoryCounts;
+    const newCounts = { ...categoryCounts };
+    if (validCategory in newCounts) {
+      newCounts[validCategory] = (newCounts[validCategory] || 0) + 1;
+    }
+    setCategoryCounts(newCounts);
+    
+    checkGameAchievements(newTotal, new3DTotal, newCounts);
+    setTimeout(checkHackerAchievement, 100);
+  }, [gamesPlayed, games3DPlayed, categoryCounts, checkGameAchievements, checkHackerAchievement]);
+
+  const tryGreyGameAchievement = useCallback(() => {
+    if (Math.random() < 0.01) { // 1% chance
+      unlockAchievement('grey-one');
+      setTimeout(checkHackerAchievement, 100);
+      return true;
+    }
+    return false;
+  }, [unlockAchievement, checkHackerAchievement]);
 
   const trackSubscribeClick = useCallback(() => {
     if (!subscribeClicked) {
@@ -167,8 +242,21 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!ownerGreeting) {
       setOwnerGreeting(true);
       unlockAchievement('owner-greeting');
+      setTimeout(checkHackerAchievement, 100);
     }
-  }, [ownerGreeting, unlockAchievement]);
+  }, [ownerGreeting, unlockAchievement, checkHackerAchievement]);
+
+  // Keyboard listener for "1" key (Enlightenment achievement)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === '1') {
+        unlockAchievement('enlightenment');
+        setTimeout(checkHackerAchievement, 100);
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [unlockAchievement, checkHackerAchievement]);
 
   const clearNewlyUnlocked = useCallback(() => {
     setNewlyUnlocked(null);
@@ -203,9 +291,10 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // Check existing progress on mount
   useEffect(() => {
-    checkGameAchievements(gamesPlayed, games3DPlayed);
+    checkGameAchievements(gamesPlayed, games3DPlayed, categoryCounts);
     if (subscribeClicked) unlockAchievement('fan');
     if (ownerGreeting) unlockAchievement('owner-greeting');
+    setTimeout(checkHackerAchievement, 100);
   }, []);
 
   return (
@@ -213,11 +302,13 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
       achievements,
       gamesPlayed,
       games3DPlayed,
+      categoryCounts,
       subscribeClicked,
       ownerGreeting,
       trackGamePlay,
       trackSubscribeClick,
       unlockOwnerGreeting,
+      tryGreyGameAchievement,
       newlyUnlocked,
       clearNewlyUnlocked,
     }}>
