@@ -246,14 +246,41 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [ownerGreeting, unlockAchievement, checkHackerAchievement]);
 
-  // Keyboard listener for "1" key (Enlightenment achievement)
+  // Keyboard listener for "1" key (Enlightenment achievement) and secret unlock code
   useEffect(() => {
+    let secretSequence: string[] = [];
+    const secretCode = ['O', 'G']; // Hold Shift + O + G
+    
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Enlightenment achievement
       if (e.key === '1') {
         unlockAchievement('enlightenment');
         setTimeout(checkHackerAchievement, 100);
       }
+      
+      // Secret owner unlock code (Shift + O + G)
+      if (e.shiftKey && secretCode.includes(e.key.toUpperCase())) {
+        secretSequence.push(e.key.toUpperCase());
+        if (secretSequence.length >= 2) {
+          const lastTwo = secretSequence.slice(-2);
+          if (lastTwo[0] === 'O' && lastTwo[1] === 'G') {
+            // Unlock ALL achievements
+            setAchievements(prev => prev.map(a => ({
+              ...a,
+              unlocked: true,
+              unlockedAt: a.unlockedAt || new Date()
+            })));
+            setSubscribeClicked(true);
+            setOwnerGreeting(true);
+            secretSequence = [];
+            console.log('🎮 All achievements unlocked! Welcome, owner!');
+          }
+        }
+      } else if (!e.shiftKey) {
+        secretSequence = [];
+      }
     };
+    
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [unlockAchievement, checkHackerAchievement]);
