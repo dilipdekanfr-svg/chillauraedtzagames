@@ -1,6 +1,8 @@
 import profileImage from "@/assets/chillaura-profile.png";
 import { useAchievements } from "@/contexts/AchievementsContext";
 import AchievementsIndex from "@/components/AchievementsIndex";
+import AuthButton from "@/components/AuthButton";
+import AdminBadgeListener from "@/components/AdminBadgeListener";
 
 const Hero = () => {
   const { trackSubscribeClick } = useAchievements();
@@ -11,6 +13,13 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+      <AdminBadgeListener />
+      
+      {/* Auth button top right */}
+      <div className="absolute top-4 right-4 z-20">
+        <AuthButton />
+      </div>
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-float" />
