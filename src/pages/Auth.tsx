@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,11 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) navigate('/', { replace: true });
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,10 +112,17 @@ const Auth = () => {
             variant="outline"
             className="w-full gap-2"
             onClick={async () => {
-              const { error } = await lovable.auth.signInWithOAuth("google", {
+              const result = await lovable.auth.signInWithOAuth("google", {
                 redirect_uri: window.location.origin,
               });
-              if (error) toast({ title: 'Error', description: String(error), variant: 'destructive' });
+              if (result.error) {
+                const msg = String((result.error as any)?.message ?? result.error);
+                if (!/cancel/i.test(msg)) {
+                  toast({ title: 'Error', description: msg, variant: 'destructive' });
+                }
+                return;
+              }
+              if (!result.redirected) navigate('/', { replace: true });
             }}
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
