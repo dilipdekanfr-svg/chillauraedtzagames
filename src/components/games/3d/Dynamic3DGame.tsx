@@ -75,7 +75,7 @@ const EnemyShip = ({ enemy, palette, onHit }: { enemy: Enemy; palette: ReturnTyp
   );
 };
 
-const PlayerShip = ({ position, palette }: { position: { x: number; y: number }; palette: ReturnType<typeof generateGamePalette> }) => {
+const PlayerShip = ({ position, palette, style }: { position: { x: number; y: number }; palette: ReturnType<typeof generateGamePalette>; style: number }) => {
   const meshRef = useRef<THREE.Group>(null);
   
   useFrame((state) => {
@@ -86,18 +86,73 @@ const PlayerShip = ({ position, palette }: { position: { x: number; y: number };
 
   return (
     <group ref={meshRef} position={[position.x, position.y, 3]}>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.3, 0.8, 6]} />
-        <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.5} metalness={0.8} />
-      </mesh>
-      <mesh position={[-0.35, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.1, 0.15, 0.4]} />
-        <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.3} />
-      </mesh>
-      <mesh position={[0.35, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.1, 0.15, 0.4]} />
-        <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.3} />
-      </mesh>
+      {style === 0 && (
+        <>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.3, 0.8, 6]} />
+            <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.5} metalness={0.8} />
+          </mesh>
+          <mesh position={[-0.35, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.1, 0.15, 0.4]} />
+            <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.3} />
+          </mesh>
+          <mesh position={[0.35, 0, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.1, 0.15, 0.4]} />
+            <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.3} />
+          </mesh>
+        </>
+      )}
+      {style === 1 && (
+        <>
+          {/* Mech: body, head, arms */}
+          <mesh>
+            <boxGeometry args={[0.5, 0.55, 0.35]} />
+            <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.4} metalness={0.9} />
+          </mesh>
+          <mesh position={[0, 0.45, 0]}>
+            <boxGeometry args={[0.28, 0.28, 0.28]} />
+            <meshStandardMaterial color={palette.secondary} emissive={palette.secondary} emissiveIntensity={0.6} />
+          </mesh>
+          <mesh position={[-0.4, 0, 0]}>
+            <boxGeometry args={[0.18, 0.5, 0.18]} />
+            <meshStandardMaterial color={palette.primary} metalness={0.8} />
+          </mesh>
+          <mesh position={[0.4, 0, 0]}>
+            <boxGeometry args={[0.18, 0.5, 0.18]} />
+            <meshStandardMaterial color={palette.primary} metalness={0.8} />
+          </mesh>
+        </>
+      )}
+      {style === 2 && (
+        <>
+          {/* Alien saucer */}
+          <mesh>
+            <cylinderGeometry args={[0.55, 0.35, 0.18, 24]} />
+            <meshStandardMaterial color={palette.primary} emissive={palette.primary} emissiveIntensity={0.5} metalness={0.9} />
+          </mesh>
+          <mesh position={[0, 0.18, 0]}>
+            <sphereGeometry args={[0.28, 16, 16]} />
+            <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.8} transparent opacity={0.85} />
+          </mesh>
+        </>
+      )}
+      {style === 3 && (
+        <>
+          {/* Tank turret */}
+          <mesh position={[0, -0.1, 0]}>
+            <boxGeometry args={[0.7, 0.25, 0.9]} />
+            <meshStandardMaterial color={palette.secondary} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.15, 0]}>
+            <cylinderGeometry args={[0.28, 0.32, 0.22, 16]} />
+            <meshStandardMaterial color={palette.accent} emissive={palette.accent} emissiveIntensity={0.3} metalness={0.9} />
+          </mesh>
+          <mesh position={[0, 0.2, 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.7, 12]} />
+            <meshStandardMaterial color={palette.primary} emissive={palette.primary} emissiveIntensity={0.5} />
+          </mesh>
+        </>
+      )}
     </group>
   );
 };
@@ -145,34 +200,95 @@ const RaceTrack = ({ palette, trackLength }: { palette: ReturnType<typeof genera
   );
 };
 
-const CarModel = ({ position, color, isPlayer }: { position: [number, number, number]; color: string; isPlayer?: boolean }) => {
+const CarModel = ({ position, color, isPlayer, style = 0 }: { position: [number, number, number]; color: string; isPlayer?: boolean; style?: number }) => {
   const meshRef = useRef<THREE.Group>(null);
   
   useFrame((state) => {
     if (meshRef.current && isPlayer) {
       meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 5) * 0.02;
+      if (style === 1 || style === 3) {
+        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 6) * 0.08;
+      }
     }
   });
 
   return (
     <group ref={meshRef} position={position}>
-      {/* Car body */}
-      <mesh>
-        <boxGeometry args={[0.6, 0.25, 1.2]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isPlayer ? 0.5 : 0.2} metalness={0.7} />
-      </mesh>
-      {/* Cabin */}
-      <mesh position={[0, 0.2, -0.1]}>
-        <boxGeometry args={[0.5, 0.2, 0.5]} />
-        <meshStandardMaterial color="#111" transparent opacity={0.8} />
-      </mesh>
-      {/* Wheels */}
-      {[[-0.35, -0.15, 0.35], [0.35, -0.15, 0.35], [-0.35, -0.15, -0.35], [0.35, -0.15, -0.35]].map((pos, i) => (
-        <mesh key={i} position={pos as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.12, 0.12, 0.1, 16]} />
-          <meshStandardMaterial color="#222" />
-        </mesh>
-      ))}
+      {style === 0 && (
+        <>
+          <mesh>
+            <boxGeometry args={[0.6, 0.25, 1.2]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isPlayer ? 0.5 : 0.2} metalness={0.7} />
+          </mesh>
+          <mesh position={[0, 0.2, -0.1]}>
+            <boxGeometry args={[0.5, 0.2, 0.5]} />
+            <meshStandardMaterial color="#111" transparent opacity={0.8} />
+          </mesh>
+          {[[-0.35, -0.15, 0.35], [0.35, -0.15, 0.35], [-0.35, -0.15, -0.35], [0.35, -0.15, -0.35]].map((pos, i) => (
+            <mesh key={i} position={pos as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.12, 0.12, 0.1, 16]} />
+              <meshStandardMaterial color="#222" />
+            </mesh>
+          ))}
+        </>
+      )}
+      {style === 1 && (
+        <>
+          {/* Hovercraft: sleek pod, no wheels, glowing underside */}
+          <mesh>
+            <sphereGeometry args={[0.4, 20, 12]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isPlayer ? 0.6 : 0.25} metalness={0.9} />
+          </mesh>
+          <mesh scale={[1.6, 0.3, 2]}>
+            <sphereGeometry args={[0.35, 16, 12]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isPlayer ? 0.4 : 0.15} metalness={0.9} />
+          </mesh>
+          <mesh position={[0, -0.25, 0]}>
+            <cylinderGeometry args={[0.5, 0.5, 0.08, 24]} />
+            <meshStandardMaterial color="#00e0ff" emissive="#00e0ff" emissiveIntensity={1.2} transparent opacity={0.6} />
+          </mesh>
+        </>
+      )}
+      {style === 2 && (
+        <>
+          {/* Motorbike: narrow, two wheels */}
+          <mesh>
+            <boxGeometry args={[0.28, 0.2, 1.1]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isPlayer ? 0.5 : 0.2} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.18, -0.1]}>
+            <boxGeometry args={[0.22, 0.15, 0.35]} />
+            <meshStandardMaterial color="#111" transparent opacity={0.85} />
+          </mesh>
+          <mesh position={[0, -0.15, 0.5]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.18, 0.18, 0.08, 20]} />
+            <meshStandardMaterial color="#111" />
+          </mesh>
+          <mesh position={[0, -0.15, -0.5]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.18, 0.18, 0.08, 20]} />
+            <meshStandardMaterial color="#111" />
+          </mesh>
+        </>
+      )}
+      {style === 3 && (
+        <>
+          {/* Monster truck: taller, big wheels */}
+          <mesh position={[0, 0.05, 0]}>
+            <boxGeometry args={[0.75, 0.4, 1.3]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isPlayer ? 0.5 : 0.2} metalness={0.6} />
+          </mesh>
+          <mesh position={[0, 0.35, -0.1]}>
+            <boxGeometry args={[0.65, 0.25, 0.55]} />
+            <meshStandardMaterial color="#111" transparent opacity={0.85} />
+          </mesh>
+          {[[-0.4, -0.15, 0.4], [0.4, -0.15, 0.4], [-0.4, -0.15, -0.4], [0.4, -0.15, -0.4]].map((pos, i) => (
+            <mesh key={i} position={pos as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.22, 0.22, 0.14, 18]} />
+              <meshStandardMaterial color="#1a1a1a" />
+            </mesh>
+          ))}
+        </>
+      )}
     </group>
   );
 };
@@ -378,6 +494,7 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
   const { trackGamePlay, tryGreyGameAchievement } = useAchievements();
   const gameType = getGameType(gameId);
   const palette = generateGamePalette(gameId);
+  const subStyle = Math.floor(gameId / 2) % 4;
   const variant = Math.floor(gameId / 2) % 20;
   const baseSpeed = 1 + (gameId % 10) * 0.1;
   const baseDifficulty = 1 + (gameId % 5) * 0.2;
@@ -651,6 +768,7 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
                 enemies={enemies}
                 bullets={bullets}
                 onEnemyHit={handleEnemyHit}
+                playerStyle={subStyle}
               />
             ) : (
               <RacingGameScene
@@ -663,6 +781,7 @@ const Dynamic3DGame = forwardRef<HTMLDivElement, Dynamic3DGameProps>(({ gameId, 
                 powerUps={powerUps}
                 onPowerUpCollect={handlePowerUpCollect}
                 speed={speed}
+                playerStyle={subStyle}
               />
             )}
           </Suspense>
