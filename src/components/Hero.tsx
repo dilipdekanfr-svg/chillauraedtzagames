@@ -5,7 +5,7 @@ import AuthButton from "@/components/AuthButton";
 import AdminBadgeListener from "@/components/AdminBadgeListener";
 
 const Hero = () => {
-  const { trackSubscribeClick } = useAchievements();
+  const { trackSubscribeClick, unlockSecretZ } = useAchievements();
 
   const handleSubscribeClick = () => {
     trackSubscribeClick();
@@ -19,6 +19,21 @@ const Hero = () => {
       <div className="absolute top-4 right-4 z-20">
         <AuthButton />
       </div>
+
+      {/* Giant hidden Z — secret achievement */}
+      <button
+        aria-label="Secret Z"
+        onClick={() => unlockSecretZ()}
+        className="pointer-events-auto absolute -bottom-10 -left-10 md:-bottom-16 md:-left-16 z-10
+          font-display font-black text-[18rem] md:text-[26rem] leading-none select-none
+          text-transparent bg-clip-text bg-gradient-to-br from-primary/25 via-secondary/20 to-neon-purple/25
+          hover:from-primary hover:via-secondary hover:to-neon-purple
+          transition-all duration-500 hover:scale-110 hover:rotate-6 cursor-pointer
+          drop-shadow-[0_0_30px_hsl(var(--primary)/0.4)]"
+        style={{ WebkitTextStroke: '2px hsl(var(--primary) / 0.35)' }}
+      >
+        Z
+      </button>
 
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">

@@ -42,6 +42,20 @@ const generateSportsName = (index: number): string => {
   return `${prefixes[index % prefixes.length]} ${suffixes[Math.floor(index / prefixes.length) % suffixes.length]}`;
 };
 
+// Generate mech/tank warfare game names
+const generateMechName = (index: number): string => {
+  const prefixes = ['Titan', 'Iron', 'Steel', 'Chrome', 'Atomic', 'Nuclear', 'Phantom', 'Rogue', 'Alpha', 'Omega', 'Vanguard', 'Sentinel', 'Colossus', 'Havoc', 'Rampage', 'Overlord'];
+  const suffixes = ['Mech', 'Titan', 'Warmachine', 'Bruiser', 'Crusher', 'Behemoth', 'Ravager', 'Warfare', 'Battalion', 'Legion', 'Squadron', 'Onslaught', 'Uprising', 'Dominion'];
+  return `${prefixes[index % prefixes.length]} ${suffixes[Math.floor(index / prefixes.length) % suffixes.length]}`;
+};
+
+// Generate hovercraft/futuristic race names
+const generateHoverName = (index: number): string => {
+  const prefixes = ['Neo', 'Cyber', 'Anti-Grav', 'Zero-G', 'Photon', 'Ion', 'Warp', 'Pulse', 'Chrono', 'Void', 'Aether', 'Quantum', 'Neon', 'Hyper', 'Flux', 'Skyline'];
+  const suffixes = ['Hover', 'Glide', 'Skimmer', 'Levitator', 'Skyracer', 'Drift', 'Repulse', 'Airborne', 'Floater', 'Zephyr', 'Skyway', 'Cloudline', 'Pathway', 'Corridor'];
+  return `${prefixes[index % prefixes.length]} ${suffixes[Math.floor(index / prefixes.length) % suffixes.length]}`;
+};
+
 // Game type configuration
 const gameTypes = [
   { type: 'shooter', generator: generateShootingGameName, emojis: ['🎯', '🔫', '💥', '🚀', '👾', '🛸', '⚡', '💫', '🔥', '☄️'] },
@@ -50,6 +64,8 @@ const gameTypes = [
   { type: 'puzzle', generator: generatePuzzleName, emojis: ['🧩', '🔲', '🎲', '💎', '🔮', '🧠', '💡', '🔑', '🎯', '⚙️'] },
   { type: 'adventure', generator: generateAdventureName, emojis: ['🗡️', '🛡️', '🏰', '🐉', '🧙', '💀', '🗺️', '🔱', '👑', '⚔️'] },
   { type: 'sports', generator: generateSportsName, emojis: ['⚽', '🏀', '🎾', '⛳', '🥊', '🤼', '🏒', '⚾', '🏈', '🎳'] },
+  { type: 'mech', generator: generateMechName, emojis: ['🤖', '🦾', '⚙️', '🛡️', '🪖', '💣', '🎖️', '🚁', '🛰️', '🔧'] },
+  { type: 'hover', generator: generateHoverName, emojis: ['🛸', '✈️', '🛩️', '🚀', '⚡', '💫', '🌌', '🌠', '💠', '🔷'] },
 ];
 
 const generate3DGameName = (index: number): string => {
