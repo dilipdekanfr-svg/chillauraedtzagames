@@ -342,7 +342,8 @@ const ShootingGameScene = ({
   playerPos,
   enemies,
   bullets,
-  onEnemyHit
+  onEnemyHit,
+  playerStyle,
 }: {
   gameId: number;
   palette: ReturnType<typeof generateGamePalette>;
@@ -351,6 +352,7 @@ const ShootingGameScene = ({
   enemies: Enemy[];
   bullets: Bullet[];
   onEnemyHit: (id: number) => void;
+  playerStyle: number;
 }) => {
   const bgType = gameId % 5;
   
@@ -368,7 +370,7 @@ const ShootingGameScene = ({
       {bgType === 4 && <Stars radius={100} depth={50} count={2500} factor={5} saturation={0.8} fade speed={1.5} />}
       
       {/* Player ship */}
-      {isPlaying && <PlayerShip position={playerPos} palette={palette} />}
+      {isPlaying && <PlayerShip position={playerPos} palette={palette} style={playerStyle} />}
       
       {/* Enemies */}
       {isPlaying && enemies.map(enemy => (
@@ -394,7 +396,8 @@ const RacingGameScene = ({
   obstacles,
   powerUps,
   onPowerUpCollect,
-  speed
+  speed,
+  playerStyle,
 }: {
   gameId: number;
   palette: ReturnType<typeof generateGamePalette>;
@@ -405,6 +408,7 @@ const RacingGameScene = ({
   powerUps: Array<{ id: number; x: number; z: number; type: number }>;
   onPowerUpCollect: (id: number) => void;
   speed: number;
+  playerStyle: number;
 }) => {
   const lanePositions = [-2.5, 0, 2.5];
   const trackVariant = gameId % 4;
@@ -447,7 +451,8 @@ const RacingGameScene = ({
         <CarModel 
           position={[lanePositions[playerLane], -0.7, 2]} 
           color={palette.accent} 
-          isPlayer 
+          isPlayer
+          style={playerStyle}
         />
       )}
       
