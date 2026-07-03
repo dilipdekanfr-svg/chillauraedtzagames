@@ -22,10 +22,11 @@ const Hero = () => {
 
       {/* Giant hidden Z — secret achievement */}
       <button
-        aria-label="Secret Z"
-        onClick={() => unlockSecretZ()}
-        className="pointer-events-auto absolute -bottom-10 -left-10 md:-bottom-16 md:-left-16 z-10
-          font-display font-black text-[18rem] md:text-[26rem] leading-none select-none
+        type="button"
+        aria-label="Secret Z achievement"
+        onClick={(e) => { e.stopPropagation(); unlockSecretZ(); }}
+        className="pointer-events-auto absolute bottom-0 left-0 md:-bottom-8 md:-left-8 z-30
+          font-display font-black text-[12rem] md:text-[20rem] leading-none select-none p-0 bg-transparent border-0
           text-transparent bg-clip-text bg-gradient-to-br from-primary/25 via-secondary/20 to-neon-purple/25
           hover:from-primary hover:via-secondary hover:to-neon-purple
           transition-all duration-500 hover:scale-110 hover:rotate-6 cursor-pointer
