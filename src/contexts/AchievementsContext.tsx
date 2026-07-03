@@ -30,6 +30,7 @@ interface AchievementsContextType {
   trackGamePlay: (category?: string) => void;
   trackSubscribeClick: () => void;
   unlockOwnerGreeting: () => void;
+  unlockSecretZ: () => void;
   tryGreyGameAchievement: () => boolean;
   newlyUnlocked: Achievement | null;
   clearNewlyUnlocked: () => void;
@@ -67,6 +68,9 @@ const defaultAchievements: Achievement[] = [
   { id: 'bloom', name: 'Bloom', description: 'Open the website in Spring', emoji: '🌸', category: 'event', requirement: 'spring', unlocked: false },
   { id: 'melting-time', name: 'Melting Time', description: 'Open the website in Autumn', emoji: '🍂', category: 'event', requirement: 'autumn', unlocked: false },
   { id: 'new-year', name: 'New Year', description: 'Open the website on January 1st', emoji: '🎆', category: 'event', requirement: '01-01', unlocked: false },
+
+  // Hidden secret
+  { id: 'secret-z', name: 'Secret Z', description: 'Find and click the giant Z hidden on the page', emoji: '🅩', category: 'premium', requirement: 'secret-z', unlocked: false },
 ];
 
 export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -246,6 +250,11 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [ownerGreeting, unlockAchievement, checkHackerAchievement]);
 
+  const unlockSecretZ = useCallback(() => {
+    unlockAchievement('secret-z');
+    setTimeout(checkHackerAchievement, 100);
+  }, [unlockAchievement, checkHackerAchievement]);
+
   // Keyboard listener for "1" key (Enlightenment achievement) and secret unlock code
   useEffect(() => {
     let secretSequence: string[] = [];
@@ -335,6 +344,7 @@ export const AchievementsProvider: React.FC<{ children: ReactNode }> = ({ childr
       trackGamePlay,
       trackSubscribeClick,
       unlockOwnerGreeting,
+      unlockSecretZ,
       tryGreyGameAchievement,
       newlyUnlocked,
       clearNewlyUnlocked,
